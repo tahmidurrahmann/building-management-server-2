@@ -152,6 +152,18 @@ async function run() {
             res.send({ result1, result2 });
         })
 
+        app.patch("/rejectAndChecked/:id", verifyToken, verifyAdmin, async (req,res) => {
+            const id = req?.params?.id;
+            const filter = {_id : new ObjectId(id)};
+            const updatedDoc = {
+                $set : {
+                    status : "reject",
+                }
+            }
+            const result = await agreementCollection.updateOne(filter, updatedDoc);
+            res?.send(result);
+        })
+
         app.post("/agreementInfo", verifyToken, async (req, res) => {
             const data = req.body;
             const result = await agreementCollection.insertOne(data);
