@@ -41,6 +41,7 @@ async function run() {
         const apartmentCollection = client.db("buildMinder").collection("apartments");
         const agreementCollection = client.db("buildMinder").collection("agreements");
         const userCollection = client.db("buildMinder").collection("users");
+        const announcementCollection = client.db("buildMinder").collection("announcements");
 
         //adminMiddleware
         const verifyAdmin = async (req, res, next) => {
@@ -54,6 +55,7 @@ async function run() {
             next();
         }
 
+        // checkAdminOrNot
         app.get("/users/admin/:email", verifyToken, async (req, res) => {
             const email = req?.params?.email;
             if (email !== req?.decoded?.email) {
@@ -68,21 +70,22 @@ async function run() {
         //memberMiddleware
         const verifyMember = async (req, res, next) => {
             const email = req.decoded.email;
-            const query = {email : email}; 
+            const query = { email: email };
             const user = await userCollection.findOne(query);
             const isMember = user?.role === "member";
-            if(!isMember){
-                return res.status(403).send({message : "forbidden access"});
+            if (!isMember) {
+                return res.status(403).send({ message: "forbidden access" });
             }
             next();
         }
 
+        // checkMemberOrNot
         app.get("/users/member/:email", async (req, res) => {
             const email = req?.params?.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
             const isMember = user?.role === "member";
-            res.send({isMember});
+            res.send({ isMember });
         })
 
         app.get("/apartments", async (req, res) => {
@@ -94,8 +97,6 @@ async function run() {
             const totalApartment = await apartmentCollection.estimatedDocumentCount();
             res.send({ result, totalApartment });
         })
-
-
 
         app.post("/users", async (req, res) => {
             const userInfo = req.body;
@@ -117,11 +118,29 @@ async function run() {
             res.send(result);
         })
 
+        app.get("/agreementInfo", verifyToken, async (req, res) => {
+            const email = req?.query?.email;
+            const query = { email: email };
+            const result = await agreementCollection.find(query).toArray();
+            res.send(result);
+        })
+
         // jwt
         app.post("/jwt", async (req, res) => {
             const user = req.body;
             const token = jwt.sign(user, process.env.ACCESS_TOKEN, { expiresIn: "24h" });
             res.send({ token })
+        })
+
+        app.post("/announcements",verifyToken, verifyAdmin, async (req, res) => {
+            const announcementInfo = req?.body;
+            const result = await announcementCollection.insertOne(announcementInfo);
+            res.send(result);
+        })
+
+        app.get("/announcements",verifyToken, async (req, res) => {
+            const result = await announcementCollection.find().toArray();
+            res.send(result);
         })
 
         await client.db("admin").command({ ping: 1 });
