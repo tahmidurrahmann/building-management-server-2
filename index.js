@@ -112,14 +112,14 @@ async function run() {
             }
         })
 
-        app.get("/users",verifyToken, verifyAdmin, async (req, res) => {
+        app.get("/users", verifyToken, verifyAdmin, async (req, res) => {
             const result = await userCollection.find().toArray();
             res.send(result);
         })
 
-        app.patch("/users/:id", async (req, res) => {
+        app.patch("/users/:id",verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
-            const filter = {_id : new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
                 $set: {
                     role: "user",
@@ -129,27 +129,27 @@ async function run() {
             res.send(result);
         })
 
-        app.patch("/makeMemberAndCheck/:id", async (req, res) => {
+        app.patch("/makeMemberAndCheck/:id", verifyToken, verifyAdmin, async (req, res) => {
             const id = req?.params?.id;
-            const filter = {_id : new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
-                $set : {
-                    status : "checked",
-                    date : new Date().toISOString().split('T')[0],
+                $set: {
+                    status: "checked",
+                    date: new Date().toISOString().split('T')[0],
                 }
             }
             const result1 = await agreementCollection.updateOne(filter, updatedDoc);
             const findUser = await agreementCollection.findOne(filter);
             const email = findUser?.email;
-            const query = {email : email};
+            const query = { email: email };
             const user = await userCollection.findOne(query);
             const updateUser = {
-                $set : {
-                    role : "member"
+                $set: {
+                    role: "member"
                 }
             }
             const result2 = await userCollection.updateOne(user, updateUser);
-            res.send({result1, result2});
+            res.send({ result1, result2 });
         })
 
         app.post("/agreementInfo", verifyToken, async (req, res) => {
@@ -177,13 +177,13 @@ async function run() {
             res.send({ token })
         })
 
-        app.post("/announcements",verifyToken, verifyAdmin, async (req, res) => {
+        app.post("/announcements", verifyToken, verifyAdmin, async (req, res) => {
             const announcementInfo = req?.body;
             const result = await announcementCollection.insertOne(announcementInfo);
             res.send(result);
         })
 
-        app.get("/announcements",verifyToken, async (req, res) => {
+        app.get("/announcements", verifyToken, async (req, res) => {
             const result = await announcementCollection.find().toArray();
             res.send(result);
         })
