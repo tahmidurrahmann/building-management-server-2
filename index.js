@@ -1,6 +1,6 @@
 const express = require('express');
 const app = express();
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 require('dotenv').config()
 const cors = require('cors');
 const jwt = require("jsonwebtoken")
@@ -80,7 +80,7 @@ async function run() {
         }
 
         // checkMemberOrNot
-        app.get("/users/member/:email", async (req, res) => {
+        app.get("/users/member/:email", verifyToken, async (req, res) => {
             const email = req?.params?.email;
             const query = { email: email };
             const user = await userCollection.findOne(query);
@@ -112,6 +112,46 @@ async function run() {
             }
         })
 
+        app.get("/users",verifyToken, verifyAdmin, async (req, res) => {
+            const result = await userCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.patch("/users/:id", async (req, res) => {
+            const id = req.params.id;
+            const filter = {_id : new ObjectId(id)};
+            const updatedDoc = {
+                $set: {
+                    role: "user",
+                }
+            }
+            const result = await userCollection.updateOne(filter, updatedDoc);
+            res.send(result);
+        })
+
+        app.patch("/makeMemberAndCheck/:id", async (req, res) => {
+            const id = req?.params?.id;
+            const filter = {_id : new ObjectId(id)};
+            const updatedDoc = {
+                $set : {
+                    status : "checked",
+                    date : new Date().toISOString().split('T')[0],
+                }
+            }
+            const result1 = await agreementCollection.updateOne(filter, updatedDoc);
+            const findUser = await agreementCollection.findOne(filter);
+            const email = findUser?.email;
+            const query = {email : email};
+            const user = await userCollection.findOne(query);
+            const updateUser = {
+                $set : {
+                    role : "member"
+                }
+            }
+            const result2 = await userCollection.updateOne(user, updateUser);
+            res.send({result1, result2});
+        })
+
         app.post("/agreementInfo", verifyToken, async (req, res) => {
             const data = req.body;
             const result = await agreementCollection.insertOne(data);
@@ -122,6 +162,11 @@ async function run() {
             const email = req?.query?.email;
             const query = { email: email };
             const result = await agreementCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.get("/allAgreements", verifyToken, verifyAdmin, async (req, res) => {
+            const result = await agreementCollection.find().toArray();
             res.send(result);
         })
 
