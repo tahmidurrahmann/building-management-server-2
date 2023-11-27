@@ -5,6 +5,7 @@ require('dotenv').config()
 const cors = require('cors');
 const jwt = require("jsonwebtoken")
 const port = process.env.PORT | 5000;
+const stripe = require("stripe")(process.env.STRIPE_TOKEN);
 
 app.use(cors());
 app.use(express.json());
@@ -43,6 +44,9 @@ async function run() {
         const userCollection = client.db("buildMinder").collection("users");
         const announcementCollection = client.db("buildMinder").collection("announcements");
         const couponCollection = client.db("buildMinder").collection("coupons");
+        const paymentCollection = client.db("buildMinder").collection("payments");
+        const historyCollection = client.db("buildMinder").collection("histories");
+
 
         //adminMiddleware
         const verifyAdmin = async (req, res, next) => {
@@ -215,8 +219,49 @@ async function run() {
 
         app.delete("/delete-coupon/:id", verifyToken, verifyAdmin, async (req, res) => {
             const id = req?.params?.id;
-            const query = {_id : new ObjectId(id)};
+            const query = { _id: new ObjectId(id) };
             const result = await couponCollection.deleteOne(query);
+            res.send(result);
+        })
+
+        //payment
+        app.post("/paymentDetails", verifyToken, async (req, res) => {
+            const paymentInfo = req?.body;
+            const result = await paymentCollection.insertOne(paymentInfo);
+            res.send(result);
+        })
+
+        app.get("/payments", verifyToken, async (req, res) => {
+            const email = req?.query?.email;
+            const query = { email: email };
+            const result = await paymentCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        // payment
+        app.post("/create-payment-intent", async (req, res) => {
+            const { price } = req.body;
+            const amount = parseInt(price * 100);
+            const paymentIntent = await stripe.paymentIntents.create({
+                amount: amount,
+                currency: "usd",
+                payment_method_types: ["card"],
+            })
+            res.send({
+                clientSecret: paymentIntent.client_secret,
+            })
+        })
+
+        app.post("/show-payment-history", async (req, res) => {
+            const paymentInfo = req?.body;
+            const result = await historyCollection.insertOne(paymentInfo);
+            res.send(result);
+        })
+
+        app.get("/show-payment-history", async (req, res) => {
+            const email = req?.query?.email;
+            const query = {email : email};
+            const result = await historyCollection.find(query).toArray();
             res.send(result);
         })
 
