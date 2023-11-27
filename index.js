@@ -42,6 +42,7 @@ async function run() {
         const agreementCollection = client.db("buildMinder").collection("agreements");
         const userCollection = client.db("buildMinder").collection("users");
         const announcementCollection = client.db("buildMinder").collection("announcements");
+        const couponCollection = client.db("buildMinder").collection("coupons");
 
         //adminMiddleware
         const verifyAdmin = async (req, res, next) => {
@@ -68,16 +69,16 @@ async function run() {
         })
 
         //memberMiddleware
-        const verifyMember = async (req, res, next) => {
-            const email = req.decoded.email;
-            const query = { email: email };
-            const user = await userCollection.findOne(query);
-            const isMember = user?.role === "member";
-            if (!isMember) {
-                return res.status(403).send({ message: "forbidden access" });
-            }
-            next();
-        }
+        // const verifyMember = async (req, res, next) => {
+        //     const email = req.decoded.email;
+        //     const query = { email: email };
+        //     const user = await userCollection.findOne(query);
+        //     const isMember = user?.role === "member";
+        //     if (!isMember) {
+        //         return res.status(403).send({ message: "forbidden access" });
+        //     }
+        //     next();
+        // }
 
         // checkMemberOrNot
         app.get("/users/member/:email", verifyToken, async (req, res) => {
@@ -117,7 +118,7 @@ async function run() {
             res.send(result);
         })
 
-        app.patch("/users/:id",verifyToken, verifyAdmin, async (req, res) => {
+        app.patch("/users/:id", verifyToken, verifyAdmin, async (req, res) => {
             const id = req.params.id;
             const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
@@ -152,12 +153,12 @@ async function run() {
             res.send({ result1, result2 });
         })
 
-        app.patch("/rejectAndChecked/:id", verifyToken, verifyAdmin, async (req,res) => {
+        app.patch("/rejectAndChecked/:id", verifyToken, verifyAdmin, async (req, res) => {
             const id = req?.params?.id;
-            const filter = {_id : new ObjectId(id)};
+            const filter = { _id: new ObjectId(id) };
             const updatedDoc = {
-                $set : {
-                    status : "reject",
+                $set: {
+                    status: "reject",
                 }
             }
             const result = await agreementCollection.updateOne(filter, updatedDoc);
@@ -197,6 +198,25 @@ async function run() {
 
         app.get("/announcements", verifyToken, async (req, res) => {
             const result = await announcementCollection.find().toArray();
+            res.send(result);
+        })
+
+        // addCoupon
+        app.post("/couponData", verifyToken, verifyAdmin, async (req, res) => {
+            const coupon = req?.body;
+            const result = await couponCollection.insertOne(coupon);
+            res.send(result);
+        })
+
+        app.get("/get-coupon-info", async (req, res) => {
+            const result = await couponCollection.find().toArray();
+            res.send(result);
+        })
+
+        app.delete("/delete-coupon/:id", verifyToken, verifyAdmin, async (req, res) => {
+            const id = req?.params?.id;
+            const query = {_id : new ObjectId(id)};
+            const result = await couponCollection.deleteOne(query);
             res.send(result);
         })
 
