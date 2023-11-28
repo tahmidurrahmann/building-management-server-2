@@ -260,9 +260,35 @@ async function run() {
 
         app.get("/show-payment-history", async (req, res) => {
             const email = req?.query?.email;
-            const query = {email : email};
+            const query = { email: email };
             const result = await historyCollection.find(query).toArray();
             res.send(result);
+        })
+
+        // totalNumberOfRooms
+        app.get("/total-rooms", verifyToken, verifyAdmin, async (req, res) => {
+            const count = await apartmentCollection.estimatedDocumentCount();
+            res.send({ count });
+        })
+
+        //getMemberNumber
+        app.get("/member-number", verifyToken, verifyAdmin, async (req, res) => {
+            const query = { role: "member" };
+            const result = await userCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        //getUserNumber
+        app.get("/user-number", verifyToken, verifyAdmin, async (req, res) => {
+            const query = { role: "user" };
+            const result = await userCollection.find(query).toArray();
+            res.send(result);
+        })
+
+        app.get("/available-unavailable", verifyToken, verifyAdmin, async (req, res) => {
+            const apartmentTotal = await apartmentCollection.estimatedDocumentCount();
+            const bookedTotal = await agreementCollection.estimatedDocumentCount();
+            res.send({apartmentTotal, bookedTotal})
         })
 
         await client.db("admin").command({ ping: 1 });
