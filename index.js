@@ -71,18 +71,6 @@ async function run() {
             res.send({ isAdmin });
         })
 
-        //memberMiddleware
-        // const verifyMember = async (req, res, next) => {
-        //     const email = req.decoded.email;
-        //     const query = { email: email };
-        //     const user = await userCollection.findOne(query);
-        //     const isMember = user?.role === "member";
-        //     if (!isMember) {
-        //         return res.status(403).send({ message: "forbidden access" });
-        //     }
-        //     next();
-        // }
-
         // checkMemberOrNot
         app.get("/users/member/:email", verifyToken, async (req, res) => {
             const email = req?.params?.email;
@@ -276,9 +264,7 @@ async function run() {
             const bookedTotal = await agreementCollection.find(query).toArray();
             res.send({apartmentTotal, bookedTotal})
         })
-
-        await client.db("admin").command({ ping: 1 });
-        console.log("Pinged your deployment. You successfully connected to MongoDB!");
+        
     } finally {
 
     }
