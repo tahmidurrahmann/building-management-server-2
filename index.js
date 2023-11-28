@@ -44,7 +44,6 @@ async function run() {
         const userCollection = client.db("buildMinder").collection("users");
         const announcementCollection = client.db("buildMinder").collection("announcements");
         const couponCollection = client.db("buildMinder").collection("coupons");
-        const paymentCollection = client.db("buildMinder").collection("payments");
         const historyCollection = client.db("buildMinder").collection("histories");
 
 
@@ -221,20 +220,6 @@ async function run() {
             const id = req?.params?.id;
             const query = { _id: new ObjectId(id) };
             const result = await couponCollection.deleteOne(query);
-            res.send(result);
-        })
-
-        //payment
-        app.post("/paymentDetails", verifyToken, async (req, res) => {
-            const paymentInfo = req?.body;
-            const result = await paymentCollection.insertOne(paymentInfo);
-            res.send(result);
-        })
-
-        app.get("/payments", verifyToken, async (req, res) => {
-            const email = req?.query?.email;
-            const query = { email: email };
-            const result = await paymentCollection.find(query).toArray();
             res.send(result);
         })
 
