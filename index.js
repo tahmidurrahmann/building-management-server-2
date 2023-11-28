@@ -272,7 +272,8 @@ async function run() {
 
         app.get("/available-unavailable", verifyToken, verifyAdmin, async (req, res) => {
             const apartmentTotal = await apartmentCollection.estimatedDocumentCount();
-            const bookedTotal = await agreementCollection.estimatedDocumentCount();
+            const query = {status : "checked"};
+            const bookedTotal = await agreementCollection.find(query).toArray();
             res.send({apartmentTotal, bookedTotal})
         })
 
