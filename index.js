@@ -45,6 +45,7 @@ async function run() {
         const announcementCollection = client.db("buildMinder").collection("announcements");
         const couponCollection = client.db("buildMinder").collection("coupons");
         const historyCollection = client.db("buildMinder").collection("histories");
+        const eventCollection = client.db("buildMinder").collection("events");
 
 
         //adminMiddleware
@@ -263,6 +264,17 @@ async function run() {
             const query = {status : "checked"};
             const bookedTotal = await agreementCollection.find(query).toArray();
             res.send({apartmentTotal, bookedTotal})
+        })
+
+        app.post("/events", verifyToken, verifyAdmin, async (req, res) => {
+            const events = req.body;
+            const result = await eventCollection.insertOne(events);
+            res.send(result);
+        })
+
+        app.get("/events",verifyToken, async (req, res) => {
+            const result = await eventCollection.find().toArray();
+            res.send(result);
         })
         
     } finally {
