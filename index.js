@@ -252,7 +252,7 @@ async function run() {
             res.send(result);
         })
 
-        //getUserNumber
+        //getUserNumber of admin
         app.get("/user-number", verifyToken, verifyAdmin, async (req, res) => {
             const query = { role: "user" };
             const result = await userCollection.find(query).toArray();
@@ -266,16 +266,7 @@ async function run() {
             res.send({apartmentTotal, bookedTotal})
         })
 
-        app.post("/events", verifyToken, verifyAdmin, async (req, res) => {
-            const events = req.body;
-            const result = await eventCollection.insertOne(events);
-            res.send(result);
-        })
-
-        app.get("/events",verifyToken, async (req, res) => {
-            const result = await eventCollection.find().toArray();
-            res.send(result);
-        })
+        
         
     } finally {
 
