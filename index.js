@@ -266,7 +266,16 @@ async function run() {
             res.send({apartmentTotal, bookedTotal})
         })
 
-        
+        app.post("/events", verifyToken, verifyAdmin, async (req, res) => {
+            const events = req.body;
+            const result = await eventCollection.insertOne(events);
+            res.send(result);
+        })
+
+        app.get("/events",verifyToken, async (req, res) => {
+            const result = await eventCollection.find().toArray();
+            res.send(result);
+        })
         
     } finally {
 
